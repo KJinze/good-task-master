@@ -405,5 +405,19 @@
 			"allowed_roles": ["main", "fallback"],
 			"max_tokens": 32768
 		}
+	],
+	"aliyun": [
+		{
+			"id": "qwen-plus",
+			"swe_score": 0,
+			"cost_per_1m_tokens": { "input": 0.8, "output": 2 },
+			"allowed_roles": ["main", "research", "fallback"],
+			"max_tokens": 128000,
+			"features": {
+			  "web_search": true,
+			  "function_call": true,
+			  "streaming": true
+			}
+		}
 	]
 }

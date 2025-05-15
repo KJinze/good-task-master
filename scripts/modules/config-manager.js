@@ -39,20 +39,22 @@ const DEFAULTS = {
 			provider: 'anthropic',
 			modelId: 'claude-3-7-sonnet-20250219',
 			maxTokens: 64000,
-			temperature: 0.2
+			temperature: 0.2,
+			baseURL: null
 		},
 		research: {
 			provider: 'perplexity',
 			modelId: 'sonar-pro',
 			maxTokens: 8700,
-			temperature: 0.1
+			temperature: 0.1,
+			baseURL: null
 		},
 		fallback: {
-			// No default fallback provider/model initially
 			provider: 'anthropic',
 			modelId: 'claude-3-5-sonnet',
-			maxTokens: 64000, // Default parameters if fallback IS configured
-			temperature: 0.2
+			maxTokens: 64000,
+			temperature: 0.2,
+			baseURL: null
 		}
 	},
 	global: {
@@ -379,6 +381,7 @@ function getParametersForRole(role, explicitRoot = null) {
 	const roleTemperature = roleConfig.temperature;
 	const modelId = roleConfig.modelId;
 	const providerName = roleConfig.provider;
+	const baseURL = roleConfig.baseURL;
 
 	let effectiveMaxTokens = roleMaxTokens; // Start with the role's default
 
@@ -424,7 +427,8 @@ function getParametersForRole(role, explicitRoot = null) {
 
 	return {
 		maxTokens: effectiveMaxTokens,
-		temperature: roleTemperature
+		temperature: roleTemperature,
+		baseURL: baseURL
 	};
 }
 
@@ -450,7 +454,8 @@ function isApiKeySet(providerName, session = null, projectRoot = null) {
 		mistral: 'MISTRAL_API_KEY',
 		azure: 'AZURE_OPENAI_API_KEY',
 		openrouter: 'OPENROUTER_API_KEY',
-		xai: 'XAI_API_KEY'
+		xai: 'XAI_API_KEY',
+		aliyun: 'ALIYUN_API_KEY'
 		// Add other providers as needed
 	};
 
@@ -541,6 +546,10 @@ function getMcpApiKeyStatus(providerName, projectRoot = null) {
 			case 'azure':
 				apiKeyToCheck = mcpEnv.AZURE_OPENAI_API_KEY;
 				placeholderValue = 'YOUR_AZURE_OPENAI_API_KEY_HERE';
+				break;
+			case 'aliyun':
+				apiKeyToCheck = mcpEnv.ALIYUN_API_KEY;
+				placeholderValue = 'YOUR_ALIYUN_API_KEY';
 				break;
 			default:
 				return false; // Unknown provider
@@ -677,6 +686,19 @@ function getAllProviders() {
 	return Object.keys(MODEL_MAP || {});
 }
 
+// 添加新的getter函数
+function getMainBaseURL(explicitRoot = null) {
+	return getModelConfigForRole('main', explicitRoot).baseURL;
+}
+
+function getResearchBaseURL(explicitRoot = null) {
+	return getModelConfigForRole('research', explicitRoot).baseURL;
+}
+
+function getFallbackBaseURL(explicitRoot = null) {
+	return getModelConfigForRole('fallback', explicitRoot).baseURL;
+}
+
 export {
 	// Core config access
 	getConfig,
@@ -720,5 +742,10 @@ export {
 	getMcpApiKeyStatus,
 
 	// ADD: Function to get all provider names
-	getAllProviders
+	getAllProviders,
+
+	// 添加新的getter函数
+	getMainBaseURL,
+	getResearchBaseURL,
+	getFallbackBaseURL
 };

@@ -24,6 +24,7 @@ import * as google from '../../src/ai-providers/google.js';
 import * as openai from '../../src/ai-providers/openai.js';
 import * as xai from '../../src/ai-providers/xai.js';
 import * as openrouter from '../../src/ai-providers/openrouter.js';
+import * as aliyun from '../../src/ai-providers/aliyun.js';
 // TODO: Import other provider modules when implemented (ollama, etc.)
 
 // --- Provider Function Map ---
@@ -62,6 +63,11 @@ const PROVIDER_FUNCTIONS = {
 		generateText: openrouter.generateOpenRouterText,
 		streamText: openrouter.streamOpenRouterText,
 		generateObject: openrouter.generateOpenRouterObject
+	},
+	aliyun: {
+		generateText: aliyun.generateAliyunText,
+		streamText: aliyun.streamAliyunText,
+		generateObject: aliyun.generateAliyunObject
 	}
 	// TODO: Add entries for ollama, etc. when implemented
 };
@@ -149,7 +155,8 @@ function _resolveApiKey(providerName, session, projectRoot = null) {
 		mistral: 'MISTRAL_API_KEY',
 		azure: 'AZURE_OPENAI_API_KEY',
 		openrouter: 'OPENROUTER_API_KEY',
-		xai: 'XAI_API_KEY'
+		xai: 'XAI_API_KEY',
+		aliyun: 'ALIYUN_API_KEY'
 	};
 
 	// Double check this -- I have had to use an api key for ollama in the past
@@ -401,9 +408,21 @@ async function _unifiedServiceRunner(serviceType, params) {
 				maxTokens: roleParams.maxTokens,
 				temperature: roleParams.temperature,
 				messages,
+				projectRoot,
+				baseURL: roleParams.baseURL,
 				...(serviceType === 'generateObject' && { schema, objectName }),
 				...restApiParams
 			};
+
+			// 添加阿里云联网搜索功能支持
+			if (providerName?.toLowerCase() === 'aliyun' && currentRole === 'research') {
+				log('info', 'Enabling Aliyun web search for research role');
+				callParams.providerOptions = {
+					aliyun: {
+						useWebSearch: true
+					}
+				};
+			}
 
 			// 6. Attempt the call with retries
 			const result = await _attemptProviderCallWithRetries(
